@@ -235,16 +235,15 @@ void relocalization_callback(
 
 // thread: visual-inertial odometry
 void process() {
-  while (true) // 这个线程是会一直循环下去
-  {
+  while (true) {
     std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>,
                           sensor_msgs::PointCloudConstPtr>>
         measurements;
     std::unique_lock<std::mutex> lk(m_buf);
     con.wait(lk,
              [&] { return (measurements = getMeasurements()).size() != 0; });
-    lk.unlock(); // 数据buffer的锁解锁，回调可以继续塞数据了
-    m_estimator.lock(); // 进行后端求解，不能和复位重启冲突
+    lk.unlock();  // 数据buffer的锁解锁，回调可以继续塞数据了
+    m_estimator.lock();  // 进行后端求解，不能和复位重启冲突
     // 给予范围的for循环，这里就是遍历每组image imu组合
     for (auto &measurement : measurements) {
       auto img_msg = measurement.second;
@@ -270,8 +269,7 @@ void process() {
           // printf("imu: dt:%f a: %f %f %f w: %f %f %f\n",dt, dx, dy, dz, rx,
           // ry, rz);
 
-        } else // 这就是针对最后一个imu数据，需要做一个简单的线性插值
-        {
+        } else {  // 这就是针对最后一个imu数据，需要做一个简单的线性插值
           double dt_1 = img_t - current_time;
           double dt_2 = t - img_t;
           current_time = img_t;
@@ -295,19 +293,17 @@ void process() {
       // set relocalization frame
       // 回环相关部分
       sensor_msgs::PointCloudConstPtr relo_msg = NULL;
-      while (!relo_buf.empty()) // 取出最新的回环帧
-      {
+      while (!relo_buf.empty()) {  // 取出最新的回环帧
         relo_msg = relo_buf.front();
         relo_buf.pop();
       }
-      if (relo_msg != NULL) // 有效回环信息
-      {
+      if (relo_msg != NULL) {  // 有效回环信息
         vector<Vector3d> match_points;
         double frame_stamp =
-            relo_msg->header.stamp.toSec(); // 回环的当前帧时间戳
+            relo_msg->header.stamp.toSec();  // 回环的当前帧时间戳
         for (unsigned int i = 0; i < relo_msg->points.size(); i++) {
           Vector3d u_v_id;
-          u_v_id.x() = relo_msg->points[i].x; // 回环帧的归一化坐标和地图点idx
+          u_v_id.x() = relo_msg->points[i].x;  // 回环帧的归一化坐标和地图点idx
           u_v_id.y() = relo_msg->points[i].y;
           u_v_id.z() = relo_msg->points[i].z;
           match_points.push_back(u_v_id);
@@ -336,14 +332,14 @@ void process() {
         int v = img_msg->channels[0].values[i] + 0.5;
         int feature_id = v / NUM_OF_CAM;
         int camera_id = v % NUM_OF_CAM;
-        double x = img_msg->points[i].x; // 去畸变后归一滑像素坐标
+        double x = img_msg->points[i].x;  // 去畸变后归一滑像素坐标
         double y = img_msg->points[i].y;
         double z = img_msg->points[i].z;
-        double p_u = img_msg->channels[1].values[i]; // 特征点像素坐标
+        double p_u = img_msg->channels[1].values[i];  // 特征点像素坐标
         double p_v = img_msg->channels[2].values[i];
-        double velocity_x = img_msg->channels[3].values[i]; // 特征点速度
+        double velocity_x = img_msg->channels[3].values[i];  // 特征点速度
         double velocity_y = img_msg->channels[4].values[i];
-        ROS_ASSERT(z == 1); // 检查是不是归一化
+        ROS_ASSERT(z == 1);  // 检查是不是归一化
         Eigen::Matrix<double, 7, 1> xyz_uv_velocity;
         xyz_uv_velocity << x, y, z, p_u, p_v, velocity_x, velocity_y;
         image[feature_id].emplace_back(camera_id, xyz_uv_velocity);
