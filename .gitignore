@@ -13,5 +13,5 @@ test/
 test.launch
 .vscode/
 .ccls-cache/
-.cahce/
+.cache/
 compile_commands.json
