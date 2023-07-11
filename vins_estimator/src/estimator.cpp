@@ -744,7 +744,7 @@ void Estimator::optimization() {
   ceres::LossFunction *loss_function;
   // loss_function = new ceres::HuberLoss(1.0);
   loss_function = new ceres::CauchyLoss(1.0);
-  // Step 1 定义待优化的参数块，类似g2o的顶点
+  // STEP: 1 定义待优化的参数块，类似g2o的顶点
   // 参数块 1： 滑窗中位姿包括位置和姿态，共11帧
   for (int i = 0; i < WINDOW_SIZE + 1; i++) {
     // 由于姿态不满足正常的加法，也就是李群上没有加法，因此需要自己定义他的加法
@@ -776,7 +776,8 @@ void Estimator::optimization() {
   TicToc t_whole, t_prepare;
   // eigen -> double
   vector2double();
-  // STEP: 2 通过残差约束来添加残差块，类似g2o的边 上一次的边缘化结果作为这一次的先验
+  // STEP: 2 通过残差约束来添加残差块，类似g2o的边
+  // 上一次的边缘化结果作为这一次的先验
 
   // STEP: 2.1 先验约束
   if (last_marginalization_info) {
@@ -1050,7 +1051,7 @@ void Estimator::optimization() {
     last_marginalization_parameter_blocks =
         parameter_blocks; // 代表该次边缘化对某些参数块形成约束，这些参数块在滑窗之后的地址
 
-  } else {  // 边缘化倒数第二帧
+  } else { // 边缘化倒数第二帧
     // 要求有上一次边缘化的结果同时，即将被margin掉的在上一次边缘化后的约束中
     // 预积分结果合并，因此只有位姿margin掉
     if (last_marginalization_info &&
